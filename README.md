@@ -25,7 +25,7 @@ How To Use
 ----------
 
 Use the provided *cryptodevtest.sh* to test the validity of the
-header for your system. The *speed.pas* example should then by
+header for your system. The *speed.pas* example should then build
 simply using:
 
     fpc speed.pas

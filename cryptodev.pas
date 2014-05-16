@@ -19,6 +19,10 @@ interface
  * Disable this define to use the new CryptoDev ABI *}
 {.$DEFINE DEFAULT_TO_OLD_CRYPTODEV_ABI}
 
+{* Enable support for the CIOCSCPU patch by Phil Sutter posted to the
+ * CryptoDev-Linux-Devel list in 2011. *}
+{.$DEFINE SUPPORT_CPU_AFFINITY_PATCH}
+
 uses
   ctypes;
 
@@ -309,6 +313,10 @@ var
   CIOCKEY,                  { _IOWR('c', 105, struct crypt_kop) }
   CIOCASYMFEAT,             { _IOR('c', 106, __u32) }
   CIOCGSESSINFO: cuint32;   { _IOWR('c', 107, struct session_info_op) }
+{$IFDEF SUPPORT_CPU_AFFINITY_PATCH}
+var
+  CIOCSCPU: cuint32;        { _IOW('c', 108, __u32) }
+{$ENDIF}
 
 {* to indicate that CRIOGET is not required in linux
  *}
@@ -364,7 +372,9 @@ initialization
   CIOCKEY        := _IOWR(CryptoType, 105, sizeof(TCryptKOp));
   CIOCASYMFEAT   := _IOR(CryptoType, 106, sizeof(cuint32));
   CIOCGSESSINFO  := _IOWR(CryptoType, 107, sizeof(TSessionInfoOp));
-
+{$IFDEF SUPPORT_CPU_AFFINITY_PATCH}
+  CIOCSCPU       := _IOW(CryptoType, 108, sizeof(cuint32));
+{$ENDIF}
   CIOCAUTHCRYPT  := _IOWR(CryptoType, 109, sizeof(TCryptAuthOp));
 
 {$IFDEF DEFAULT_TO_OLD_CRYPTODEV_ABI}

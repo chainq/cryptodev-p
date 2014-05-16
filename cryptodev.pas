@@ -17,7 +17,7 @@ interface
  * which means the /dev/crypto binary interface is changed:
  * https://github.com/nmav/cryptodev-linux/commit/2770937dba40f6e96d5cf7c5ab1b2385c4c24057
  * Disable this define to use the new CryptoDev ABI *}
-{.$DEFINE USE_OLD_CRYPTODEV_ABI}
+{.$DEFINE DEFAULT_TO_OLD_CRYPTODEV_ABI}
 
 uses
   ctypes;
@@ -326,6 +326,12 @@ var
   CIOCASYNCCRYPT,           { _IOW('c', 110, struct crypt_op) }
   CIOCASYNCFETCH: cuint32;  { _IOR('c', 111, struct crypt_op) }
 
+const
+  CRYPTODEV_NEW_ABI = 1;
+  CRYPTODEV_OLD_ABI = 0;
+
+procedure SetCryptoDevABI(ABIType: Integer);
+
 implementation
 
 uses
@@ -333,6 +339,22 @@ uses
 
 const
   CryptoType: Byte = Ord('c');
+
+
+procedure SetCryptoDevABI(ABIType: Integer);
+begin
+  if ABIType = CRYPTODEV_NEW_ABI then
+    begin
+      CIOCASYNCCRYPT := _IOW(CryptoType, 110, sizeof(TCryptOp));
+      CIOCASYNCFETCH := _IOR(CryptoType, 111, sizeof(TCryptOp));
+    end
+  else
+    begin
+      CIOCASYNCCRYPT := _IOW(CryptoType, 107, sizeof(TCryptOp));
+      CIOCASYNCFETCH := _IOR(CryptoType, 108, sizeof(TCryptOp));
+    end;
+end;
+
 
 initialization
   CRIOGET        := _IOWR(CryptoType, 101, sizeof(cuint32));
@@ -345,11 +367,9 @@ initialization
 
   CIOCAUTHCRYPT  := _IOWR(CryptoType, 109, sizeof(TCryptAuthOp));
 
-{$IFDEF USE_OLD_CRYPTODEV_ABI}
-  CIOCASYNCCRYPT := _IOW(CryptoType, 107, sizeof(TCryptOp));
-  CIOCASYNCFETCH := _IOR(CryptoType, 108, sizeof(TCryptOp));
+{$IFDEF DEFAULT_TO_OLD_CRYPTODEV_ABI}
+  SetCryptoDevABI(CRYPTODEV_OLD_ABI);
 {$ELSE}
-  CIOCASYNCCRYPT := _IOW(CryptoType, 110, sizeof(TCryptOp));
-  CIOCASYNCFETCH := _IOR(CryptoType, 111, sizeof(TCryptOp));
+  SetCryptoDevABI(CRYPTODEV_NEW_ABI);
 {$ENDIF}
 end. {* unit cryptodev *}
